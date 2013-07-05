@@ -70,6 +70,44 @@ colnames(dt$result)<-c("precision","recall","accuracy")
 rownames(dt$result)<-dat$level
   
 
+
+
+# library(partykit)
+# library(CHAID)
+# chi <- NULL
+# # Build the CHAID model.
+# chi$rchaid <- chaid(classlabel ~ .,
+#                     data=dat$train[,c(dat$categoric,dat$target)]
+# )
+# chi$pr <- predict(chi$rchaid, cbind(dat$test, dat$label))
+# #chi$pr <- predict(chi$rchaid, dat$train[,c(dat$categoric,dat$target)])  
+# 
+# for(i in 1:dat$nlevel) {
+#   chi$tp[i] <- sum(dat$label==dat$level[i] & t(chi$pr)==dat$level[i])
+#   chi$fp[i] <- sum(dat$label==dat$level[i] & t(chi$pr)!=dat$level[i])
+#   chi$tn[i] <- sum(dat$label!=dat$level[i] & t(chi$pr)!=dat$level[i])
+#   chi$fn[i] <- sum(dat$label!=dat$level[i] & t(chi$pr)==dat$level[i])
+#   chi$precision[i] <- chi$tp[i]/(chi$tp[i]+chi$fp[i])
+#   chi$recall[i] <- chi$tp[i]/(chi$tp[i]+chi$fn[i])
+#   chi$true_neg[i] <- chi$tn[i]/(chi$tn[i]+chi$fp[i])
+#   chi$accuracy[i] <- (chi$tn[i]+chi$tp[i])/(chi$tn[i]+chi$tp[i]+chi$fn[i]+chi$fp[i])
+# }
+# chi$precision.mean <- mean(chi$precision)
+# chi$recall.mean <- mean(chi$recall)
+# chi$accuracy.mean <- mean(chi$accuracy)
+# 
+# chi$result <- cbind(chi$precision, chi$recall, chi$accuracy)
+# colnames(chi$result)<-c("precision","recall","accuracy")
+# rownames(chi$result)<-dat$level
+
+
+
+
+
+
+
+
+
 for(i in 1:dat$nlevel) {
   knnclass$tp[i] <- sum(dat$label==dat$level[i] & t(knnclass$pr)==dat$level[i])
   knnclass$fp[i] <- sum(dat$label==dat$level[i] & t(knnclass$pr)!=dat$level[i])
