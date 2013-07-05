@@ -290,7 +290,7 @@ model_list$KNN<-KNN_Prediction(missings_imputed);
 #CHAID_prediction<-CHAID_prediction(missings_imputed);
 #KNN_prediction<-KNN_Prediction(missings_imputed);
 
-print(model_list$dt$result);
+#E#print(model_list$dt$result);
 #print(model_list$CHAID$result);
-print(model_list$KNN$result);
+#E#print(model_list$KNN$result);
 
