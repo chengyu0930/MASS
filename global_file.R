@@ -19,6 +19,11 @@ loadFullData<-function(filenumber)
 
 prepareLabelsNamesData<-function(dat)
 {
+  if(!is.factor(dat$dataset[,1]))
+  {
+    dat$dataset[,1] <- as.factor(dat$dataset[,1])  # guarantee the label column is a factor
+  }
+  
   dat$categoric <- paste("v",1:(length(dat$dataset)-1),sep="")
   dat$target  <- c("classlabel")
   dat$nlevel <- nlevels(dat$dataset[,1])
@@ -58,8 +63,9 @@ splitDataTrainingTestValidation<-function(dat,perc_train,perc_test)
   
 replaceNumericalValues <- function(dat)  
 {
-  dat_processed <- chiM(dat)
-  return(dat_processed)
+  library(discretization)
+  dis_data <- chiM(dat)
+  return(dis_data)
 }
 
 
@@ -67,7 +73,7 @@ replaceCategoricalValues<-function(dat)
 {
   dat_processed<-dat
   nb_col<-dim(dat)[2]
-  for(i in 1:nb_col)
+  for(i in 2:nb_col)
   {
     if(!is.numeric(dat[,i]))
     {
@@ -81,7 +87,7 @@ replaceCategoricalValues<-function(dat)
 
 
 
-
+#######################2013.6.21 updated ################################## 
 prediction_KPIs<-function(dat,model)
 {
   for(i in 1:dat$nlevel) {
@@ -105,7 +111,7 @@ prediction_KPIs<-function(dat,model)
   
 }
 
-
+########## DT flow
 dt_Prediction<-function(dat)
 {
   dt <- NULL
@@ -118,23 +124,53 @@ dt_Prediction<-function(dat)
   return(dt);
 }
 
+DTflow <- function(dat, para_mis=0) 
+{
+  if(para_mis!= 0)
+  {
+    dat$dataset <- missingValuesImputation(dat$dataset)
+  } 
+  dat <- splitDataTrainingTestValidation(dat, perc_train=0.6, perc_test=0.2)
+  dt<-dt_Prediction(dat)
+}
 
-
-
+########## CHAID flow
 CHAID_Prediction<-function(dat)
 {
+  library(grid)
   library(partykit)
   library(CHAID)
   chi <- NULL
   # Build the CHAID model.
-  chi$rchaid <- chaid(classlabel ~ .,
-                      data=dat$train[,c(dat$categoric,dat$target)]
-  )
-  chi$pr <- predict(chi$rchaid, cbind(dat$test, dat$label))
-  #chi$pr <- predict(chi$rchaid, dat$train[,c(dat$categoric,dat$target)]) 
+  chi$rchaid <- chaid(classlabel ~ ., data=dat$train[,c(dat$categoric,dat$target)])
+  chi$pr <- predict(chi$rchaid, cbind(dat$test[,c(dat$categoric)], dat$test[,1]))
   chi<-prediction_KPIs(dat,chi);
   return(chi)
 }
+
+CHAIDflow <- function(dat, para_mis=0, para_discret=1) 
+{
+  if(para_mis!= 0)
+  {
+    dat$dataset <- missingValuesImputation(dat$dataset)
+  } 
+  if(para_discret!= 0)
+  {
+    dat$dataset <- replaceNumericalValues(dat$dataset[,c(dat$categoric,dat$target)])$Disc.data
+    dat$dataset <- dat$dataset[,c(dat$target,dat$categoric)]
+  }
+  for(i in 2:ncol(dat$dataset)){
+    if(!is.factor(dat$dataset[,i]))
+    {
+      dat$dataset[,i] <- as.factor(dat$dataset[,i])  # guarantee the label column is a factor
+    }
+  }
+  dat <- splitDataTrainingTestValidation(dat, perc_train=0.6, perc_test=0.2)  
+  chi<-CHAID_Prediction(dat)
+}
+
+
+
 
 
 
@@ -221,22 +257,20 @@ modelComparison<-function(models,priority)
 
 
 ######################## 2013.6.21 Data Preparation ################################
-data_loaded <- loadFullData(3); #loading file number ...
-data_named <- prepareLabelsNamesData(data_loaded)
-data_named$dataset <- missingValuesImputation(data_named$dataset)
-data_processed <- splitDataTrainingTestValidation(data_named, perc_train=0.6, perc_test=0.2)
+data_loaded <- loadFullData(1); #loading file number ...
+data_processed <- prepareLabelsNamesData(data_loaded)
+
 ####################### 2013.6.21 updated and tested ############################### 
 
+####################### 2013.6.22 DT Flow ################################ 
+dt <- DTflow(data_processed) 
+#dt <- DTflow(data_processed, para_mis=1) 
 ####################### 2013.6.22 updated and tested DT Flow ####################### 
 
-
-DTflow <- function(dat) 
-{
-  dt<-dt_Prediction(dat)
-}
-
-
-
+####################### 2013.6.22 CHAID Flow ################################ 
+print("Warning: Long time will be consumed for big numerical-type data")
+chi <- CHAIDflow(data_processed) 
+####################### 2013.6.22 updated and tested CHAID Flow ####################### 
 
 
 
